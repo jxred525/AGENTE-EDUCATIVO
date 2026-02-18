@@ -58,7 +58,6 @@
             position: relative;
         }
 
-        /* Barras de Tiempo */
         #timer-container, .player-timer-container { width: 100%; height: 20px; background: #000; border: 2px solid #fff; overflow: hidden; position: relative; }
         #timer-bar-fill, #player-timer-fill { height: 100%; width: 100%; transition: width 1s linear, background-color 0.3s; background-color: var(--time-green); }
         
@@ -183,7 +182,7 @@
         <input type="text" id="join-code" maxlength="6" class="w-full p-3 mb-4 border-4 border-black text-center text-lg uppercase outline-none" placeholder="CÓDIGO">
         <h2 class="text-[10px] mb-2 text-blue-700">TU NICKNAME</h2>
         <input type="text" id="player-name" maxlength="10" class="w-full p-3 mb-6 border-4 border-black text-center text-base uppercase outline-none" placeholder="NOMBRE">
-        <div id="join-error" class="text-red-600 text-[7px] mb-4 hidden">SALA NO ENCONTRADA</div>
+        <div id="join-error" class="text-red-600 text-[7px] mb-4 hidden">SALA NO ENCONTRADA O ERROR DE CONEXIÓN</div>
         <button onclick="window.joinGame()" id="join-btn" class="w-full py-4 bg-orange-500 text-white text-[10px] pixel-btn">UNIRSE</button>
     </div>
 
@@ -307,7 +306,7 @@
             firebaseConfig = manualConfig;
         }
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'agente-pe-universal-v3';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'agente-pe-universal-v4';
         
         let app, auth, db, user;
         let myRole = '', myName = '', myScore = 0, currentCode = '';
@@ -317,7 +316,7 @@
         let audioCtx = null, isMusicPlaying = false;
         let currentQuestionNum = 0, totalQuestions = 0;
         
-        // FUNCIÓN UUID COMPATIBLE CON MÓVILES (Fix)
+        // FUNCIÓN UUID COMPATIBLE
         function generateUUID() {
             if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -436,19 +435,19 @@
                 questionQueue = shuffle([...fullDatabase]);
                 totalQuestions = questionQueue.length;
                 showScreen('host-lobby-screen');
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode), { status: 'lobby', ts: Date.now(), players: {}, totalQ: totalQuestions });
                 
-                onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode), (snap) => {
-                    if (!snap.exists()) return;
-                    const data = snap.data();
-                    if (data.status === 'lobby') {
-                        const lobbyList = document.getElementById('player-list-lobby');
-                        lobbyList.innerHTML = '';
-                        const players = Object.values(data.players || {});
-                        document.getElementById('player-count').innerText = players.length;
-                        players.forEach(p => { lobbyList.innerHTML += `<span class="player-badge uppercase">${p.name}</span>`; });
-                        if(isMusicPlaying) playTone(523, 0.1, 'sine');
-                    }
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode), { 
+                    status: 'lobby', ts: Date.now(), totalQ: totalQuestions 
+                });
+                
+                // ESCUCHAR JUGADORES (SUBCOLECCIÓN)
+                const playersCol = collection(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode, 'players');
+                onSnapshot(playersCol, (snap) => {
+                    const lobbyList = document.getElementById('player-list-lobby');
+                    lobbyList.innerHTML = '';
+                    document.getElementById('player-count').innerText = snap.size;
+                    snap.forEach(d => { lobbyList.innerHTML += `<span class="player-badge uppercase">${d.data().name}</span>`; });
+                    if(isMusicPlaying && snap.size > 0) playTone(523, 0.1, 'sine');
                 });
             } else { showScreen('player-lobby'); }
         };
@@ -523,19 +522,17 @@
                     btn.disabled = false; btn.innerText = "VINCULAR"; return; 
                 }
                 currentCode = cin; myName = name;
-                await updateDoc(roomRef, { [`players.${sessionID}`]: { name: myName, score: 0 } });
+                
+                // REGISTRAR EN SUBCOLECCIÓN (Evita conflictos)
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode, 'players', sessionID), { 
+                    name: myName, score: 0 
+                });
 
+                // ESCUCHAR ESTADO DE SALA
                 onSnapshot(roomRef, (snap) => {
                     if (!snap.exists()) return;
                     const s = snap.data();
                     
-                    if (s.players && s.players[sessionID]) {
-                        const currentScore = s.players[sessionID].score;
-                        myScore = currentScore;
-                        document.getElementById('player-score-game').innerText = currentScore;
-                        document.getElementById('player-score-wait').innerText = currentScore;
-                    }
-
                     if (s.status === 'playing' && s.ts !== currentStartTime) {
                         currentStartTime = s.ts; currentCorrect = s.correct; currentLimit = s.limit;
                         hasAnswered = false; showScreen('player-screen');
@@ -544,13 +541,30 @@
                     } else if (s.status === 'timeout' && !hasAnswered) {
                         hasAnswered = true; document.getElementById('wait-message').innerText = "¡TIEMPO AGOTADO!"; showScreen('wait-screen');
                     } else if (s.status === 'finished') { 
-                        showFinalRank(s.players);
+                        // Obtener todos los jugadores para el ranking final
+                        getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode, 'players')).then(sn => {
+                            const allP = [];
+                            sn.forEach(d => allP.push(d.data()));
+                            showFinalRank(allP);
+                        });
                     }
                 });
+                
+                // ESCUCHAR MI PUNTAJE
+                onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode, 'players', sessionID), (snap) => {
+                    if(snap.exists()) {
+                        const sc = snap.data().score;
+                        myScore = sc;
+                        document.getElementById('player-score-game').innerText = sc;
+                        document.getElementById('player-score-wait').innerText = sc;
+                    }
+                });
+
                 showScreen('wait-screen');
             } catch (error) { 
                 console.error(error);
-                alert("ERROR AL UNIR: " + error.message);
+                document.getElementById('join-error').innerText = "ERROR AL CONECTAR: " + error.code;
+                document.getElementById('join-error').classList.remove('hidden');
                 btn.disabled = false; btn.innerText = "REINTENTAR"; 
             }
         };
@@ -579,22 +593,23 @@
                 const elapsed = (Date.now() - currentStartTime) / 1000;
                 const bonus = Math.max(0, Math.floor((currentLimit - elapsed) * 20));
                 const points = 100 + bonus;
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode), { [`players.${sessionID}.score`]: increment(points) });
+                // ACTUALIZAR MI PUNTAJE EN MI DOCUMENTO
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode, 'players', sessionID), { 
+                    score: increment(points) 
+                });
                 playTone(880, 0.1, 'triangle'); 
             } else { playTone(150, 0.3, 'sawtooth'); }
             showScreen('wait-screen');
             document.getElementById('wait-message').innerText = "RESPUESTA REGISTRADA";
         };
 
-        function showFinalRank(players) {
-            const data = Object.values(players || {}).sort((a, b) => b.score - a.score);
-            const myRank = data.findIndex(p => p.name === myName) + 1;
-            
+        function showFinalRank(playersData) {
+            playersData.sort((a, b) => b.score - a.score);
+            const myRank = playersData.findIndex(p => p.name === myName) + 1;
             document.getElementById('wait-message').innerText = "¡TORNEO FINALIZADO!";
             const rankDiv = document.getElementById('final-rank-display');
             rankDiv.classList.remove('hidden');
             document.getElementById('rank-number').innerText = `#${myRank}`;
-            
             showScreen('wait-screen');
         }
 
@@ -613,9 +628,9 @@
                 document.body.appendChild(conf);
             }
 
-            const roomSnap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode));
-            const playersMap = roomSnap.data().players || {};
-            const data = Object.values(playersMap);
+            const playersSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode, 'players'));
+            const data = [];
+            playersSnap.forEach(d => data.push(d.data()));
             data.sort((a, b) => b.score - a.score);
             
             // Top 3 Podium
