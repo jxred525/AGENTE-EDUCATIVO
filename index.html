@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#2c3e50">
+    
+    <title>Reto Agente PE: Coach Pro</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --track-red: #c0392b;
+            --time-green: #2ecc71;
+            --time-yellow: #f1c40f;
+            --time-red: #e74c3c;
+            --gold: #FFD700;
+            --silver: #C0C0C0;
+            --bronze: #CD7F32;
+        }
+        
+        * {
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        body { 
+            font-family: 'Press Start 2P', cursive; 
+            background-color: #2c3e50; 
+            color: white; 
+            overflow: hidden; 
+            background-image: linear-gradient(rgba(0,0,0,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.3) 1px, transparent 1px);
+            background-size: 20px 20px;
+            height: 100vh; width: 100vw; margin: 0;
+        }
+
+        .readable-font { font-family: 'Roboto Mono', monospace; }
+
+        .pixel-box { background: #fff; border: 4px solid #000; box-shadow: 6px 6px 0px rgba(0,0,0,0.5); color: #000; }
+        .pixel-btn { border: 4px solid #000; box-shadow: 4px 4px 0px #000; transition: all 0.1s; cursor: pointer; color: white; text-transform: uppercase; }
+        .pixel-btn:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px #000; }
+        
+        .btn-red { background-color: #e74c3c; } 
+        .btn-blue { background-color: #3498db; }
+        .btn-yellow { background-color: #f1c40f; color: #000; } 
+        .btn-green { background-color: #2ecc71; }
+
+        .track-bg {
+            background: var(--track-red);
+            border-top: 6px solid white; border-bottom: 6px solid white;
+            position: relative;
+        }
+
+        /* Barras de Tiempo */
+        #timer-container, .player-timer-container { width: 100%; height: 100%; background: #2c3e50; border: 3px solid #fff; overflow: hidden; position: relative; border-radius: 8px; }
+        #timer-bar-fill, #player-timer-fill { height: 100%; width: 100%; transition: width 1s linear, background-color 0.3s; background-color: var(--time-green); }
+        
+        .timer-high { background-color: var(--time-green) !important; }
+        .timer-med { background-color: var(--time-yellow) !important; }
+        .timer-low { background-color: var(--time-red) !important; animation: blink 0.5s infinite; }
+        
+        @keyframes blink { 50% { opacity: 0.7; } }
+
+        .big-code { 
+            font-size: 3rem; 
+            letter-spacing: 0.2rem; 
+            color: #f1c40f; 
+            text-shadow: 4px 4px 0px #000; 
+            word-break: break-all;
+        }
+        @media (min-width: 768px) { .big-code { font-size: 5rem; letter-spacing: 0.5rem; } }
+
+        .crt-overlay { 
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.05) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02)); 
+            background-size: 100% 2px, 3px 100%; 
+            pointer-events: none; position: fixed; inset: 0; z-index: 600; 
+        }
+
+        .player-badge { 
+            background: #fff; color: #000; padding: 6px 12px; 
+            border: 2px solid #000; font-size: 10px; margin: 4px; 
+            display: inline-block; 
+            box-shadow: 2px 2px 0px #000;
+        }
+        
+        .back-btn {
+            position: absolute; top: 10px; left: 10px;
+            background: #e74c3c; padding: 8px 12px;
+            font-size: 8px; border: 2px solid #000;
+            cursor: pointer; z-index: 50; color: white;
+            box-shadow: 2px 2px 0px #000;
+        }
+        .back-btn:active { transform: translate(1px, 1px); box-shadow: none; }
+
+        /* PODIO */
+        .podium-bar {
+            width: 60px; 
+            border: 3px solid #000;
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+            position: relative;
+            transform-origin: bottom;
+            animation: growUp 1s ease-out forwards;
+        }
+        @media (min-width: 768px) { .podium-bar { width: 100px; border: 4px solid #000; } }
+
+        @keyframes growUp { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+        
+        .podium-gold { background: var(--gold); height: 180px; z-index: 10; order: 2; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+        .podium-silver { background: var(--silver); height: 130px; z-index: 5; order: 1; }
+        .podium-bronze { background: var(--bronze); height: 90px; z-index: 5; order: 3; }
+
+        .winner-name { 
+            position: absolute; top: -50px; 
+            width: 150px; text-align: center; 
+            font-size: 8px; color: #fff; text-shadow: 2px 2px 0 #000; 
+            left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.7); padding: 4px; border-radius: 4px;
+        }
+        
+        .confetti {
+            position: fixed; width: 10px; height: 10px;
+            background-color: #f0f;
+            animation: fall linear forwards;
+            z-index: 500;
+        }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
+
+        .honor-list-item {
+            background: rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            padding: 8px;
+            display: flex; justify-content: space-between;
+            font-size: 10px;
+            font-family: 'Roboto Mono', monospace;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen">
+    <div class="crt-overlay"></div>
+
+    <!-- PANTALLA CARGA -->
+    <div id="status-screen" class="w-full max-w-sm pixel-box p-8 text-center z-10">
+        <div id="loader" class="flex flex-col items-center gap-6">
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-black"></div>
+            <p class="text-[8px]">INICIANDO SISTEMA...</p>
+        </div>
+    </div>
+
+    <!-- SELECCIÓN DE ROL -->
+    <div id="role-screen" class="hidden w-full max-w-sm pixel-box p-8 text-center z-10 relative">
+        <h1 class="text-[12px] md:text-[14px] mb-8 text-blue-900 uppercase leading-relaxed">RETO: EVALUACIÓN NACIONAL</h1>
+        <button onclick="window.showInstructions('host')" class="w-full py-4 mb-4 bg-blue-600 text-[10px] md:text-[12px] pixel-btn">COACH (DOCENTE)</button>
+        <button onclick="window.showInstructions('player')" class="w-full py-4 bg-green-600 text-[10px] md:text-[12px] pixel-btn">ATLETA (ALUMNO)</button>
+        <div class="mt-6">
+            <button onclick="window.toggleMusic()" id="music-btn" class="text-[8px] text-gray-400 underline uppercase pixel-btn bg-gray-800 p-2 border-2 border-white hover:bg-gray-700">🎵 ACTIVAR MÚSICA</button>
+        </div>
+    </div>
+
+    <!-- INSTRUCCIONES -->
+    <div id="instruction-screen" class="hidden w-full max-w-md pixel-box p-8 z-10 relative">
+        <button onclick="window.goBack()" class="back-btn">⬅ SALIR</button>
+        <h2 class="text-center text-[12px] mb-4 text-red-600 uppercase mt-6">REGLAS DEL JUEGO</h2>
+        <div id="instruction-content" class="text-[9px] leading-relaxed space-y-4 mb-8 text-gray-700"></div>
+        <button onclick="window.proceedAfterInstructions()" class="w-full py-4 bg-black text-white text-[10px] pixel-btn">ENTENDIDO</button>
+    </div>
+
+    <!-- LOBBY JUGADOR -->
+    <div id="player-lobby" class="hidden w-full max-w-sm pixel-box p-6 text-center z-10 relative">
+        <button onclick="window.goBack()" class="back-btn">⬅ SALIR</button>
+        <h2 class="text-[10px] mb-2 text-blue-700 mt-8">CÓDIGO DE SALA</h2>
+        <input type="text" id="join-code" maxlength="6" class="w-full p-3 mb-4 border-4 border-black text-center text-lg uppercase outline-none" placeholder="CÓDIGO">
+        <h2 class="text-[10px] mb-2 text-blue-700">TU NICKNAME</h2>
+        <input type="text" id="player-name" maxlength="10" class="w-full p-3 mb-6 border-4 border-black text-center text-base uppercase outline-none" placeholder="NOMBRE">
+        <div id="join-error" class="text-red-600 text-[7px] mb-4 hidden">SALA NO ENCONTRADA</div>
+        <button onclick="window.joinGame()" id="join-btn" class="w-full py-4 bg-orange-500 text-white text-[10px] pixel-btn">UNIRSE</button>
+    </div>
+
+    <!-- ESPERA JUGADOR -->
+    <div id="wait-screen" class="hidden w-full max-w-sm pixel-box p-10 text-center z-10">
+        <div class="flex flex-col items-center gap-6">
+            <i class="fas fa-running animate-bounce text-4xl text-green-600"></i>
+            <p id="wait-message" class="text-[10px] leading-loose text-center">ESPERANDO INICIO...</p>
+            
+            <!-- Posición Final -->
+            <div id="final-rank-display" class="hidden w-full bg-blue-800 text-white p-4 border-4 border-yellow-400 animate-pulse">
+                <p class="text-[10px] mb-2">TU POSICIÓN FINAL:</p>
+                <p id="rank-number" class="text-3xl font-bold text-yellow-400">#--</p>
+            </div>
+
+            <div class="mt-4 bg-black text-yellow-400 p-2 text-[8px] w-full text-center border-2 border-white">
+                PUNTAJE: <span id="player-score-wait" class="text-white text-lg block mt-2">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOBBY HOST -->
+    <div id="host-lobby-screen" class="hidden w-full max-w-5xl z-10 text-center flex flex-col items-center relative p-4">
+        <button onclick="window.goBack()" class="back-btn top-4 left-4 text-xs md:text-sm md:px-4 md:py-2">⬅ CERRAR SALA</button>
+        <h2 class="text-[10px] md:text-[14px] mb-4 text-white uppercase tracking-widest mt-8">CÓDIGO DE ACCESO:</h2>
+        <div class="pixel-box p-6 md:p-8 bg-black border-white mb-6">
+            <h1 id="big-room-code" class="big-code">------</h1>
+        </div>
+        <div class="w-full max-w-3xl pixel-box p-4 md:p-6 bg-gray-100 min-h-[150px] mb-6">
+            <p class="text-[10px] md:text-[12px] mb-4 text-gray-500 uppercase text-left font-bold">ATLETAS CONECTADOS (<span id="player-count">0</span>):</p>
+            <div id="player-list-lobby" class="flex flex-wrap justify-center gap-2 max-h-[200px] overflow-y-auto"></div>
+        </div>
+        <button onclick="window.nextQuestion()" class="px-8 py-4 md:px-10 md:py-5 bg-green-500 text-white text-[10px] md:text-[12px] pixel-btn">¡INICIAR EVALUACIÓN!</button>
+    </div>
+
+    <!-- VISTA HOST (JUEGO) RE-DISEÑADA -->
+    <div id="host-screen" class="hidden w-full max-w-7xl z-10 flex flex-col items-center p-2">
+        
+        <!-- Header Info Grande -->
+        <div class="w-full flex justify-between items-end mb-4 border-b-4 border-white pb-4">
+            <div class="flex flex-col">
+                <span class="text-xs text-gray-400">CÓDIGO SALA</span>
+                <span id="game-room-code" class="text-yellow-400 text-2xl md:text-4xl font-bold tracking-widest">---</span>
+            </div>
+            <div class="flex flex-col items-end">
+                <span class="text-xs text-gray-400">PROGRESO</span>
+                <span id="q-counter" class="text-white text-xl md:text-3xl font-bold">PREGUNTA 1 DE --</span>
+            </div>
+        </div>
+
+        <!-- Timer Section (Gigante) -->
+        <div class="w-full mb-6">
+            <div class="flex justify-between items-center mb-1">
+                <span class="text-xs text-white uppercase animate-pulse">Tiempo para responder:</span>
+                <span id="host-timer-text" class="text-yellow-400 text-2xl md:text-3xl font-bold">0s</span>
+            </div>
+            <div id="timer-container" class="w-full h-8 md:h-10 border-4 border-white bg-gray-900 rounded-md">
+                <div id="timer-bar-fill"></div>
+            </div>
+        </div>
+
+        <!-- Caja de Pregunta -->
+        <div class="pixel-box w-full max-w-5xl p-6 md:p-10 mb-6 md:mb-8 text-center track-bg mx-auto shadow-2xl">
+            <h2 id="host-question" class="text-sm md:text-2xl lg:text-3xl text-white uppercase leading-snug drop-shadow-md font-bold">CARGANDO PREGUNTA...</h2>
+        </div>
+        
+        <!-- Opciones -->
+        <div id="host-options" class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 w-full max-w-6xl mx-auto"></div>
+        
+        <div class="mt-8">
+            <button onclick="window.showPodium()" class="px-8 py-3 bg-red-600 text-white text-xs md:text-sm pixel-btn border-2 border-white hover:bg-red-700">FINALIZAR JUEGO</button>
+        </div>
+    </div>
+
+    <!-- BOTONERA JUGADOR -->
+    <div id="player-screen" class="hidden fixed inset-0 p-4 flex flex-col z-10 bg-[#1a1a1a]">
+        <div class="flex justify-between items-center mb-2">
+            <div class="text-[8px] text-white">PREGUNTA: <span id="player-q-counter">1/--</span></div>
+            <div class="bg-black border border-white px-3 py-1 text-yellow-400 text-[10px]">
+                PTS: <span id="player-score-game">0</span>
+            </div>
+        </div>
+        
+        <div class="player-timer-container mb-4 h-4 border-white">
+            <div id="player-timer-fill"></div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4 flex-grow">
+            <button onclick="window.sendAnswer(0)" class="btn-red pixel-btn flex flex-col items-center justify-center h-full"><i class="fas fa-square text-4xl md:text-5xl mb-2"></i></button>
+            <button onclick="window.sendAnswer(1)" class="btn-blue pixel-btn flex flex-col items-center justify-center h-full"><i class="fas fa-caret-up text-5xl md:text-6xl mb-2"></i></button>
+            <button onclick="window.sendAnswer(2)" class="btn-yellow pixel-btn flex flex-col items-center justify-center h-full"><i class="fas fa-circle text-4xl md:text-5xl mb-2"></i></button>
+            <button onclick="window.sendAnswer(3)" class="btn-green pixel-btn flex flex-col items-center justify-center h-full"><i class="fas fa-play fa-rotate-270 text-4xl md:text-5xl mb-2"></i></button>
+        </div>
+    </div>
+
+    <!-- PODIO FINAL (HOST) -->
+    <div id="podium-screen" class="hidden w-full max-w-5xl z-10 text-center flex flex-col items-center justify-center p-4">
+        <h2 class="text-xl md:text-3xl text-yellow-400 mb-6 uppercase drop-shadow-md animate-bounce">🏆 CAMPEONES 🏆</h2>
+        
+        <div id="podium-container" class="flex items-end justify-center gap-2 md:gap-6 h-64 md:h-80 w-full mb-8"></div>
+        
+        <div class="w-full max-w-3xl bg-black bg-opacity-70 p-4 md:p-6 border-4 border-white rounded-lg mb-6">
+            <h3 class="text-white text-[12px] md:text-[16px] mb-4 uppercase border-b-2 border-white pb-2">Cuadro de Honor</h3>
+            <div id="honor-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left"></div>
+        </div>
+        
+        <button onclick="window.resetGame()" class="px-8 py-4 md:px-12 md:py-6 bg-white text-black text-[10px] md:text-[12px] pixel-btn border-4 border-yellow-500 hover:bg-yellow-100">NUEVA PARTIDA</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, collection, getDoc, increment } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+        document.addEventListener('touchstart', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+        
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'agente-pe-coach-pro';
+        
+        let app, auth, db, user;
+        let myRole = '', myName = '', myScore = 0, currentCode = '';
+        let currentCorrect = -1, currentStartTime = 0, currentLimit = 0, hasAnswered = false;
+        let hostTimerInterval = null, playerTimerInterval = null;
+        let questionQueue = [];
+        let audioCtx = null, isMusicPlaying = false;
+        let currentQuestionNum = 0, totalQuestions = 0;
+        
+        const sessionID = crypto.randomUUID();
+
+        // Audio System
+        function playTone(freq, dur, type = 'square') {
+            if (!audioCtx || !isMusicPlaying) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + dur);
+        }
+
+        let melodyInterval = null;
+        function startBackgroundMusic() {
+            if (melodyInterval) clearInterval(melodyInterval);
+            let noteIdx = 0;
+            const notes = [110, 0, 110, 0, 130, 0, 146, 0]; 
+            melodyInterval = setInterval(() => {
+                if(isMusicPlaying && notes[noteIdx] > 0) playTone(notes[noteIdx], 0.1, 'triangle');
+                noteIdx = (noteIdx + 1) % notes.length;
+            }, 250);
+        }
+
+        window.toggleMusic = () => {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            isMusicPlaying = !isMusicPlaying;
+            const btn = document.getElementById('music-btn');
+            if (isMusicPlaying) {
+                btn.innerText = "🔊 MÚSICA: ON"; btn.classList.add('bg-green-600'); btn.classList.remove('bg-gray-800');
+                startBackgroundMusic(); playTone(440, 0.2); 
+            } else {
+                btn.innerText = "🔇 MÚSICA: OFF"; btn.classList.add('bg-gray-800'); btn.classList.remove('bg-green-600');
+                if (melodyInterval) clearInterval(melodyInterval);
+            }
+        };
+
+        const fullDatabase = [
+            { q: "¿QUÉ SIGNIFICA AEE?", c: "ÁREAS ESTATALES DE EVALUACIÓN", w: ["ADMINISTRACIÓN ESTATAL DE EDUCACIÓN", "ASOCIACIÓN DE ESTUDIOS EDUCATIVOS", "AGENCIA ESTATAL DE EVALUACIÓN"], t: 15, d: "MEDIO" },
+            { q: "¿QUÉ SIGNIFICA AEF?", c: "AUTORIDAD EDUCATIVA FEDERAL", w: ["ASOCIACIÓN DE EDUCACIÓN FEDERAL", "ÁREA DE EVALUACIÓN FEDERAL", "ADMINISTRACIÓN DE ENSEÑANZA FEDERAL"], t: 15, d: "MEDIO" },
+            { q: "¿QUÉ ES UN ATP?", c: "ASESOR TÉCNICO PEDAGÓGICO", w: ["AUXILIAR TÉCNICO PROFESIONAL", "ADMINISTRADOR TÉCNICO PEDAGÓGICO", "ASISTENTE TÉCNICO DE PLANEACIÓN"], t: 15, d: "MEDIO" },
+            { q: "¿QUÉ SIGNIFICA CENEVAL?", c: "CENTRO NACIONAL DE EVALUACIÓN PARA LA EDUCACIÓN SUPERIOR", w: ["CENTRO NACIONAL DE VALIDACIÓN DE ESTUDIOS SUPERIORES", "COMISIÓN DE EVALUACIÓN NACIONAL Y VALORACIÓN", "CONSEJO EDUCATIVO DE EVALUACIÓN Y LOGRO ACADÉMICO"], t: 20, d: "FÁCIL" },
+            { q: "¿QUÉ ES LA CPEUM?", c: "CONSTITUCIÓN POLÍTICA DE LOS ESTADOS UNIDOS MEXICANOS", w: ["COMISIÓN POLÍTICA DE EDUCACIÓN DE LOS ESTADOS UNIDOS MEXICANOS", "CONSEJO PARA LA EDUCACIÓN DE LA UNIÓN MEXICANA", "CARTA DE POLÍTICAS EDUCATIVAS UNIVERSALES DE MÉXICO"], t: 12, d: "DIFÍCIL" },
+            { q: "¿QUÉ SIGNIFICA DGE-SPEP?", c: "DIRECCIÓN GENERAL DE EVALUACIÓN", w: ["DIRECCIÓN GENERAL DE EDUCACIÓN SUPERIOR", "DEPARTAMENTO DE GESTIÓN Y EVALUACIÓN PÚBLICA", "DIRECCIÓN DE GESTIÓN EDUCATIVA Y POLÍTICAS"], t: 15, d: "MEDIO" },
+            { q: "¿QUÉ ES EL DOF?", c: "DIARIO OFICIAL DE LA FEDERACIÓN", w: ["DEPARTAMENTO DE ORGANIZACIÓN FEDERAL", "DOCUMENTO OFICIAL DE LA FEDERACIÓN", "DIRECCIÓN DE OFICINAS FEDERALES"], t: 15, d: "FÁCIL" },
+            { q: "¿QUÉ FUE LA PRUEBA ENLACE?", c: "EVALUACIÓN NACIONAL DEL LOGRO ACADÉMICO EN CENTROS ESCOLARES", w: ["EXAMEN NACIONAL DE LOGROS ACADÉMICOS Y CULTURALES ESCOLARES", "ESTUDIO NACIONAL DE LOGRO ESCOLAR Y APRENDIZAJE CENTRADO", "EVALUACIÓN DE NIVEL ACADÉMICO EN CENTROS EDUCATIVOS"], t: 15, d: "DIFÍCIL" },
+            { q: "¿QUÉ ES EL EXANI-I?", c: "EXAMEN NACIONAL DE INGRESO A LA EDUCACIÓN MEDIA SUPERIOR", w: ["EXAMEN DE ADMISIÓN NACIONAL E INGRESO SUPERIOR", "EVALUACIÓN DE INGRESO INICIAL A EDUCACIÓN MEDIA", "EXAMEN DE APTITUD DE NIVEL INTERMEDIO SUPERIOR"], t: 15, d: "MEDIO" },
+            { q: "¿QUÉ SIGNIFICA EXCALE?", c: "EXÁMENES DE LA CALIDAD Y EL LOGRO EDUCATIVOS", w: ["EVALUACIÓN POR CALIDAD EDUCATIVA Y LOGRO ESCOLAR", "EXAMEN DE CALIDAD LECTORA Y EDUCATIVA", "ESTUDIO DE CALIDAD Y LOGRO ESCOLAR AVANZADO"], t: 12, d: "DIFÍCIL" },
+            { q: "¿QUÉ SIGNIFICA IEA?", c: "ASOCIACIÓN INTERNACIONAL DE EVALUACIÓN", w: ["INSTITUTO DE EVALUACIÓN ACADÉMICA INTERNACIONAL", "INSTITUCIÓN DE ESTUDIOS AVANZADOS DE EVALUACIÓN", "INVESTIGACIÓN EDUCATIVA APLICADA INTERNACIONAL"], t: 15, d: "MEDIO" },
+            { q: "¿QUÉ SON LAS IES?", c: "INSTITUCIONES DE EDUCACIÓN SUPERIOR", w: ["INSTITUTOS DE EDUCACIÓN SECUNDARIA", "INICIATIVAS DE EDUCACIÓN SUPERIOR", "INVESTIGACIÓN Y ESTUDIOS SUPERIORES"], t: 15, d: "MEDIO" },
+            { q: "¿QUÉ ERA EL INEE?", c: "INSTITUTO NACIONAL PARA LA EVALUACIÓN DE LA EDUCACIÓN", w: ["INSTITUTO NACIONAL DE ESTUDIOS EDUCATIVOS Y EVALUACIÓN", "INSTITUCIÓN DE EVALUACIÓN ESCOLAR Y ESTADÍSTICA", "INICIATIVA NACIONAL DE EDUCACIÓN Y EVALUACIÓN"], t: 15, d: "MEDIO" },
+            { q: "¿QUÉ SIGNIFICA INEGI?", c: "INSTITUTO NACIONAL DE ESTADÍSTICA Y GEOGRAFÍA", w: ["INSTITUTO NACIONAL DE ESTUDIOS GEOGRÁFICOS E INFORMÁTICOS", "INSTITUCIÓN DE ESTADÍSTICA GUBERNAMENTAL E INFORMACIÓN", "INSTITUTO DE ECONOMÍA, GEOGRAFÍA E INFORMÁTICA"], t: 20, d: "FÁCIL" },
+            { q: "¿QUÉ ES LA LGE?", c: "LEY GENERAL DE EDUCACIÓN", w: ["LEY DE GESTIÓN ESCOLAR", "LINEAMIENTOS GENERALES EDUCATIVOS", "LEGISLACIÓN DE GOBIERNO EDUCATIVO"], t: 15, d: "FÁCIL" },
+            { q: "¿QUÉ SIGNIFICA OCDE?", c: "ORGANIZACIÓN PARA LA COOPERACIÓN Y EL DESARROLLO ECONÓMICOS", w: ["ORGANIZACIÓN DE COMERCIO Y DESARROLLO ECONÓMICO", "OFICINA DE COOPERACIÓN EDUCATIVA Y DESARROLLO", "ORGANISMO DE CONTROL Y DESARROLLO ECONÓMICO"], t: 20, d: "FÁCIL" },
+            { q: "¿QUÉ ES EL SNTE?", c: "SINDICATO NACIONAL DE TRABAJADORES DE LA EDUCACIÓN", w: ["SOCIEDAD NACIONAL DE TRABAJO ESCOLAR Y EDUCACIÓN", "SINDICATO NACIONAL DE TÉCNICOS DE LA EDUCACIÓN", "SISTEMA NACIONAL DE TRABAJADORES Y EDUCADORES"], t: 20, d: "FÁCIL" },
+            { q: "¿QUÉ SIGNIFICA UNESCO?", c: "ORG. DE LAS NACIONES UNIDAS PARA LA EDUCACIÓN, LA CIENCIA Y LA CULTURA", w: ["UNIÓN DE NACIONES PARA LA EDUCACIÓN SUPERIOR Y CULTURA", "UNIDAD DE ESTUDIOS CULTURALES, CIENTÍFICOS Y EDUCATIVOS", "ORGANIZACIÓN UNIVERSAL DE CULTURA, CIENCIA Y EDUCACIÓN"], t: 15, d: "DIFÍCIL" },
+            { q: "¿QUÉ ES PISA?", c: "PROGRAMA PARA LA EVALUACIÓN INTERNACIONAL DE LOS ALUMNOS", w: ["PROYECTO INTERNACIONAL DE SEGUIMIENTO AL ALUMNO", "PRUEBA INTERNACIONAL DE SABERES Y APRENDIZAJES", "PROGRAMA DE INVESTIGACIÓN SOBRE ALUMNOS"], t: 15, d: "MEDIO" },
+            { q: "¿QUÉ ES LA SEP?", c: "SECRETARÍA DE EDUCACIÓN PÚBLICA", w: ["SISTEMA DE EDUCACIÓN PRIMARIA", "SERVICIO DE EDUCACIÓN PÚBLICA", "SOCIEDAD EDUCATIVA PROFESIONAL"], t: 20, d: "FÁCIL" },
+            { q: "¿QUÉ ES EL SEN?", c: "SISTEMA EDUCATIVO NACIONAL", w: ["SERVICIO EDUCATIVO NACIONAL", "SECRETARÍA DE EDUCACIÓN NACIONAL", "SOCIEDAD DE ENSEÑANZA NACIONAL"], t: 15, d: "MEDIO" },
+            { q: "¿QUÉ SIGNIFICA NEM?", c: "NUEVA ESCUELA MEXICANA", w: ["NORMA DE EDUCACIÓN MEXICANA", "NUEVO ENFOQUE MAGISTERIAL", "NÚCLEO EDUCATIVO MODERNO"], t: 15, d: "MEDIO" },
+            { q: "¿QUÉ SIGNIFICA NNA?", c: "NIÑAS, NIÑOS Y ADOLESCENTES", w: ["NUEVOS NIÑOS Y ADOLESCENTES", "NORMA DE NIÑEZ Y ADOLESCENCIA", "NÚCLEO DE NIÑEZ Y APRENDIZAJE"], t: 15, d: "FÁCIL" },
+            { q: "¿QUÉ ES EL PDA?", c: "PROCESO DE DESARROLLO DEL APRENDIZAJE", w: ["PROGRAMA DE DESARROLLO ACADÉMICO", "PLAN DE APRENDIZAJE Y DESARROLLO", "PROYECTO DE DESEMPEÑO ACADÉMICO"], t: 15, d: "DIFÍCIL" },
+            { q: "¿QUÉ ES LA USICAMM?", c: "UNIDAD DEL SISTEMA PARA LA CARRERA DE LAS MAESTRAS Y MAESTROS", w: ["UNIDAD DE SERVICIOS E INTELIGENCIA PARA LA CARRERA MAGISTERIAL", "UNIÓN SINDICAL PARA LA CARRERA DE LAS MAESTRAS Y MAESTROS", "UNIDAD DE SUPERVISIÓN E INGRESO A LA CARRERA MAGISTERIAL"], t: 12, d: "DIFÍCIL" }
+        ];
+
+        async function init() {
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
+                else await signInAnonymously(auth);
+                onAuthStateChanged(auth, (u) => { if (u) { user = u; showScreen('role-screen'); } });
+            } catch (err) { console.error("Init Error:", err); }
+        }
+
+        function showScreen(id) {
+            document.querySelectorAll('body > div:not(.crt-overlay)').forEach(div => div.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        window.goBack = () => { location.reload(); };
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        window.showInstructions = (role) => {
+            myRole = role;
+            const content = document.getElementById('instruction-content');
+            content.innerHTML = role === 'host' ? `<p>• COACH: Genera el código.</p><p>• Preguntas variadas y tiempo dinámico.</p>` : `<p>• ATLETA: Ingresa el código.</p><p>• ¡Tu barra de tiempo cambia de color!</p>`;
+            showScreen('instruction-screen');
+        };
+
+        window.proceedAfterInstructions = async () => {
+            if (myRole === 'host') {
+                currentCode = Array.from({length: 6}, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)]).join('');
+                document.getElementById('big-room-code').innerText = currentCode;
+                document.getElementById('game-room-code').innerText = currentCode;
+                questionQueue = shuffle([...fullDatabase]);
+                totalQuestions = questionQueue.length;
+                showScreen('host-lobby-screen');
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode), { status: 'lobby', ts: Date.now(), players: {}, totalQ: totalQuestions });
+                
+                onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode), (snap) => {
+                    if (!snap.exists()) return;
+                    const data = snap.data();
+                    if (data.status === 'lobby') {
+                        const lobbyList = document.getElementById('player-list-lobby');
+                        lobbyList.innerHTML = '';
+                        const players = Object.values(data.players || {});
+                        document.getElementById('player-count').innerText = players.length;
+                        players.forEach(p => { lobbyList.innerHTML += `<span class="player-badge uppercase">${p.name}</span>`; });
+                        if(isMusicPlaying) playTone(523, 0.1, 'sine');
+                    }
+                });
+            } else { showScreen('player-lobby'); }
+        };
+
+        window.nextQuestion = async () => {
+            if (myRole !== 'host') return;
+            if (questionQueue.length === 0) { window.showPodium(); return; }
+            
+            clearInterval(hostTimerInterval);
+            showScreen('host-screen');
+            playTone(660, 0.3, 'square'); 
+            
+            const item = questionQueue.shift();
+            currentQuestionNum = totalQuestions - questionQueue.length;
+            const options = shuffle([{ t: item.c, ok: true }, ...item.w.map(x => ({ t: x, ok: false }))]);
+            currentCorrect = options.findIndex(o => o.ok);
+
+            document.getElementById('q-counter').innerText = `PREGUNTA ${currentQuestionNum} DE ${totalQuestions}`;
+            document.getElementById('host-question').innerText = item.q;
+            const container = document.getElementById('host-options');
+            container.innerHTML = '';
+            const colors = ['btn-red', 'btn-blue', 'btn-yellow', 'btn-green'];
+            options.forEach((opt, i) => {
+                container.innerHTML += `<div class="${colors[i]} pixel-box p-4 md:p-6 text-white border-black flex items-center justify-center text-center h-auto min-h-[5rem] cursor-default"><span class="readable-font text-xs sm:text-sm md:text-xl lg:text-2xl leading-tight break-words hyphens-auto">${opt.t}</span></div>`;
+            });
+
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode), { 
+                status: 'playing', correct: currentCorrect, ts: Date.now(), limit: item.t, qNum: currentQuestionNum, tQ: totalQuestions
+            });
+
+            startHostTimer(item.t);
+        };
+
+        function startHostTimer(sec) {
+            let left = sec;
+            const bar = document.getElementById('timer-bar-fill');
+            const text = document.getElementById('host-timer-text');
+            bar.style.transition = 'none'; bar.style.width = '100%'; bar.className = 'timer-high';
+            void bar.offsetWidth; 
+            bar.style.transition = `width ${sec}s linear`; bar.style.width = '0%';
+
+            hostTimerInterval = setInterval(async () => {
+                left--; text.innerText = Math.max(0, left) + 's';
+                const ratio = left / sec;
+                if (ratio <= 0.25) { bar.className = 'timer-low'; playTone(220, 0.1, 'sawtooth'); } 
+                else if (ratio <= 0.5) bar.className = 'timer-med';
+
+                if (left <= 0) {
+                    clearInterval(hostTimerInterval);
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode), { status: 'timeout' });
+                    document.getElementById('host-question').innerText = "¡TIEMPO AGOTADO!";
+                    playTone(110, 0.5, 'sawtooth');
+                    setTimeout(() => window.nextQuestion(), 2000);
+                }
+            }, 1000);
+        }
+
+        // PLAYER LOGIC
+        window.joinGame = async () => {
+            const cin = document.getElementById('join-code').value.trim().toUpperCase();
+            const name = document.getElementById('player-name').value.trim().toUpperCase();
+            if (!cin || !name) return;
+            const btn = document.getElementById('join-btn');
+            btn.disabled = true; btn.innerText = "CONECTANDO...";
+            
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', cin);
+            try {
+                const roomSnap = await getDoc(roomRef);
+                if (!roomSnap.exists()) { document.getElementById('join-error').classList.remove('hidden'); btn.disabled = false; btn.innerText = "VINCULAR"; return; }
+                currentCode = cin; myName = name;
+                await updateDoc(roomRef, { [`players.${sessionID}`]: { name: myName, score: 0 } });
+
+                onSnapshot(roomRef, (snap) => {
+                    if (!snap.exists()) return;
+                    const s = snap.data();
+                    
+                    if (s.players && s.players[sessionID]) {
+                        const currentScore = s.players[sessionID].score;
+                        myScore = currentScore;
+                        document.getElementById('player-score-game').innerText = currentScore;
+                        document.getElementById('player-score-wait').innerText = currentScore;
+                    }
+
+                    if (s.status === 'playing' && s.ts !== currentStartTime) {
+                        currentStartTime = s.ts; currentCorrect = s.correct; currentLimit = s.limit;
+                        hasAnswered = false; showScreen('player-screen');
+                        document.getElementById('player-q-counter').innerText = `${s.qNum}/${s.tQ}`;
+                        startPlayerTimer(s.limit);
+                    } else if (s.status === 'timeout' && !hasAnswered) {
+                        hasAnswered = true; document.getElementById('wait-message').innerText = "¡TIEMPO AGOTADO!"; showScreen('wait-screen');
+                    } else if (s.status === 'finished') { 
+                        showFinalRank(s.players);
+                    }
+                });
+                showScreen('wait-screen');
+            } catch (error) { btn.disabled = false; btn.innerText = "ERROR"; }
+        };
+
+        function startPlayerTimer(sec) {
+            if(playerTimerInterval) clearInterval(playerTimerInterval);
+            const pBar = document.getElementById('player-timer-fill');
+            pBar.style.transition = 'none'; pBar.style.width = '100%'; pBar.className = 'timer-high';
+            void pBar.offsetWidth;
+            pBar.style.transition = `width ${sec}s linear`; pBar.style.width = '0%';
+            
+            let pLeft = sec;
+            playerTimerInterval = setInterval(() => {
+                pLeft--;
+                const pRatio = pLeft / sec;
+                if (pRatio <= 0.25) pBar.className = 'timer-low';
+                else if (pRatio <= 0.5) pBar.className = 'timer-med';
+                if(pLeft <= 0) clearInterval(playerTimerInterval);
+            }, 1000);
+        }
+
+        window.sendAnswer = async (idx) => {
+            if (hasAnswered) return;
+            hasAnswered = true;
+            if (idx === currentCorrect) {
+                const elapsed = (Date.now() - currentStartTime) / 1000;
+                const bonus = Math.max(0, Math.floor((currentLimit - elapsed) * 20));
+                const points = 100 + bonus;
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode), { [`players.${sessionID}.score`]: increment(points) });
+                playTone(880, 0.1, 'triangle'); 
+            } else { playTone(150, 0.3, 'sawtooth'); }
+            showScreen('wait-screen');
+            document.getElementById('wait-message').innerText = "RESPUESTA REGISTRADA";
+        };
+
+        function showFinalRank(players) {
+            const data = Object.values(players || {}).sort((a, b) => b.score - a.score);
+            const myRank = data.findIndex(p => p.name === myName) + 1;
+            
+            document.getElementById('wait-message').innerText = "¡TORNEO FINALIZADO!";
+            const rankDiv = document.getElementById('final-rank-display');
+            rankDiv.classList.remove('hidden');
+            document.getElementById('rank-number').innerText = `#${myRank}`;
+            
+            showScreen('wait-screen');
+        }
+
+        window.showPodium = async () => {
+            clearInterval(hostTimerInterval);
+            if(melodyInterval) clearInterval(melodyInterval); 
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode), { status: 'finished' });
+            showScreen('podium-screen');
+            
+            for(let i=0; i<50; i++) {
+                const conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.backgroundColor = `hsl(${Math.random()*360}, 100%, 50%)`;
+                conf.style.animationDuration = Math.random() * 3 + 2 + 's';
+                document.body.appendChild(conf);
+            }
+
+            const roomSnap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode));
+            const playersMap = roomSnap.data().players || {};
+            const data = Object.values(playersMap);
+            data.sort((a, b) => b.score - a.score);
+            
+            // Top 3 Podium
+            const container = document.getElementById('podium-container');
+            container.innerHTML = '';
+            const positions = [{ idx: 1, class: 'podium-silver' }, { idx: 0, class: 'podium-gold' }, { idx: 2, class: 'podium-bronze' }];
+            positions.forEach(pos => {
+                const p = data[pos.idx];
+                if (p) {
+                    container.innerHTML += `
+                        <div class="podium-bar ${pos.class}">
+                            <div class="winner-name">
+                                <span class="block font-bold text-yellow-300 text-[8px] md:text-[10px]">${pos.idx === 0 ? '🏆' : ''} ${p.name}</span>
+                                <span class="block text-white text-[8px] md:text-[10px]">${p.score} PTS</span>
+                            </div>
+                            <span class="text-xl md:text-3xl text-black font-bold mb-2">${pos.idx + 1}</span>
+                        </div>`;
+                }
+            });
+
+            // Honor List (4-8)
+            const honorList = document.getElementById('honor-list');
+            honorList.innerHTML = '';
+            for(let i=3; i<8; i++) {
+                if(data[i]) {
+                    honorList.innerHTML += `
+                    <div class="honor-list-item">
+                        <span class="text-white">${i+1}. ${data[i].name}</span>
+                        <span class="text-yellow-400">${data[i].score}</span>
+                    </div>`;
+                }
+            }
+        };
+
+        window.resetGame = () => location.reload();
+        window.onload = init;
+    </script>
+</body>
+</html>
