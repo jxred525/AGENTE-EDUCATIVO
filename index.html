@@ -58,6 +58,7 @@
             position: relative;
         }
 
+        /* Barras de Tiempo */
         #timer-container, .player-timer-container { width: 100%; height: 20px; background: #000; border: 2px solid #fff; overflow: hidden; position: relative; }
         #timer-bar-fill, #player-timer-fill { height: 100%; width: 100%; transition: width 1s linear, background-color 0.3s; background-color: var(--time-green); }
         
@@ -154,6 +155,7 @@
         <div id="loader" class="flex flex-col items-center gap-6">
             <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-black"></div>
             <p class="text-[8px]">INICIANDO SISTEMA...</p>
+            <p id="config-warning" class="text-[6px] text-red-500 hidden">CONFIGURACIÓN PENDIENTE</p>
         </div>
     </div>
 
@@ -182,7 +184,7 @@
         <input type="text" id="join-code" maxlength="6" class="w-full p-3 mb-4 border-4 border-black text-center text-lg uppercase outline-none" placeholder="CÓDIGO">
         <h2 class="text-[10px] mb-2 text-blue-700">TU NICKNAME</h2>
         <input type="text" id="player-name" maxlength="10" class="w-full p-3 mb-6 border-4 border-black text-center text-base uppercase outline-none" placeholder="NOMBRE">
-        <div id="join-error" class="text-red-600 text-[7px] mb-4 hidden">SALA NO ENCONTRADA O ERROR DE CONEXIÓN</div>
+        <div id="join-error" class="text-red-600 text-[7px] mb-4 hidden">SALA NO ENCONTRADA</div>
         <button onclick="window.joinGame()" id="join-btn" class="w-full py-4 bg-orange-500 text-white text-[10px] pixel-btn">UNIRSE</button>
     </div>
 
@@ -192,7 +194,7 @@
             <i class="fas fa-running animate-bounce text-4xl text-green-600"></i>
             <p id="wait-message" class="text-[10px] leading-loose text-center">ESPERANDO INICIO...</p>
             
-            <!-- Posición Final -->
+            <!-- Posición Final (Solo visible al terminar) -->
             <div id="final-rank-display" class="hidden w-full bg-blue-800 text-white p-4 border-4 border-yellow-400 animate-pulse">
                 <p class="text-[10px] mb-2">TU POSICIÓN FINAL:</p>
                 <p id="rank-number" class="text-3xl font-bold text-yellow-400">#--</p>
@@ -201,6 +203,9 @@
             <div class="mt-4 bg-black text-yellow-400 p-2 text-[8px] w-full text-center border-2 border-white">
                 PUNTAJE: <span id="player-score-wait" class="text-white text-lg block mt-2">0</span>
             </div>
+
+            <!-- Botón Salir (Solo al final) -->
+            <button id="player-exit-btn" onclick="window.goBack()" class="hidden w-full py-3 bg-red-600 text-white text-[8px] pixel-btn mt-4">VOLVER AL MENÚ</button>
         </div>
     </div>
 
@@ -283,17 +288,18 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, collection, getDoc, increment } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, collection, getDoc, increment, getDocs } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
         document.addEventListener('touchstart', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
         
+        // --- CONFIGURACIÓN PARA GITHUB ---
         const manualConfig = {
-            apiKey: "AIzaSyA6pQbm22ZOgf2DzX-LIl9rEFUs9Lcs_v8",
-            authDomain: "agente-pe-48b82.firebaseapp.com",
-            projectId: "agente-pe-48b82",
-            storageBucket: "agente-pe-48b82.firebasestorage.app",
-            messagingSenderId: "700138682010",
-            appId: "1:700138682010:web:a2d2bf1d433e04ffd25123"
+            apiKey: "PEGA_TU_API_KEY_AQUI", // RECUERDA PONER TU API KEY
+            authDomain: "TU_PROYECTO.firebaseapp.com",
+            projectId: "TU_ID_PROYECTO",
+            storageBucket: "TU_PROYECTO.appspot.com",
+            messagingSenderId: "TU_SENDER_ID",
+            appId: "TU_APP_ID"
         };
 
         let firebaseConfig;
@@ -306,7 +312,7 @@
             firebaseConfig = manualConfig;
         }
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'agente-pe-universal-v4';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'agente-pe-universal-fix-v2';
         
         let app, auth, db, user;
         let myRole = '', myName = '', myScore = 0, currentCode = '';
@@ -316,7 +322,7 @@
         let audioCtx = null, isMusicPlaying = false;
         let currentQuestionNum = 0, totalQuestions = 0;
         
-        // FUNCIÓN UUID COMPATIBLE
+        // Función UUID Compatible
         function generateUUID() {
             if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -394,6 +400,11 @@
 
         async function init() {
             try {
+                if(manualConfig.apiKey === "PEGA_TU_API_KEY_AQUI" && !isInternalEnv) {
+                    document.getElementById('config-warning').classList.remove('hidden');
+                    return; 
+                }
+
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
@@ -431,14 +442,15 @@
             if (myRole === 'host') {
                 currentCode = Array.from({length: 6}, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)]).join('');
                 document.getElementById('big-room-code').innerText = currentCode;
-                document.getElementById('game-room-code').innerText = currentCode;
+                // Game Code en pantalla de juego
+                // Fix anterior: asegúrate de que el elemento exista antes de asignarle texto
+                const gc = document.getElementById('game-room-code');
+                if(gc) gc.innerText = currentCode;
+
                 questionQueue = shuffle([...fullDatabase]);
                 totalQuestions = questionQueue.length;
                 showScreen('host-lobby-screen');
-                
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode), { 
-                    status: 'lobby', ts: Date.now(), totalQ: totalQuestions 
-                });
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode), { status: 'lobby', ts: Date.now(), players: {}, totalQ: totalQuestions });
                 
                 // ESCUCHAR JUGADORES (SUBCOLECCIÓN)
                 const playersCol = collection(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode, 'players');
@@ -468,6 +480,10 @@
             document.getElementById('q-counter').innerText = `${currentQuestionNum}/${totalQuestions}`;
             document.getElementById('host-question').innerText = item.q;
             document.getElementById('diff-indicator').innerText = `${item.t}s | ${item.d}`;
+            // Re-asignar código de sala por si acaso
+            const gc = document.getElementById('game-room-code');
+            if(gc) gc.innerText = currentCode;
+
             const container = document.getElementById('host-options');
             container.innerHTML = '';
             const colors = ['btn-red', 'btn-blue', 'btn-yellow', 'btn-green'];
@@ -514,21 +530,25 @@
             const btn = document.getElementById('join-btn');
             btn.disabled = true; btn.innerText = "CONECTANDO...";
             
+            // Usamos la colección principal artifacts/appId/public/data/gamerooms
             const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', cin);
+            
             try {
                 const roomSnap = await getDoc(roomRef);
                 if (!roomSnap.exists()) { 
+                    document.getElementById('join-error').innerText = "SALA NO ENCONTRADA";
                     document.getElementById('join-error').classList.remove('hidden'); 
                     btn.disabled = false; btn.innerText = "VINCULAR"; return; 
                 }
+                
                 currentCode = cin; myName = name;
                 
-                // REGISTRAR EN SUBCOLECCIÓN (Evita conflictos)
+                // USAR SUBCOLECCIONES (MEJOR PARA PERMISOS ESTÁNDAR)
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode, 'players', sessionID), { 
                     name: myName, score: 0 
                 });
 
-                // ESCUCHAR ESTADO DE SALA
+                // Escuchar estado del juego (Documento Padre)
                 onSnapshot(roomRef, (snap) => {
                     if (!snap.exists()) return;
                     const s = snap.data();
@@ -541,7 +561,7 @@
                     } else if (s.status === 'timeout' && !hasAnswered) {
                         hasAnswered = true; document.getElementById('wait-message').innerText = "¡TIEMPO AGOTADO!"; showScreen('wait-screen');
                     } else if (s.status === 'finished') { 
-                        // Obtener todos los jugadores para el ranking final
+                        // Obtener todos los jugadores para el ranking final (Corrección)
                         getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode, 'players')).then(sn => {
                             const allP = [];
                             sn.forEach(d => allP.push(d.data()));
@@ -550,7 +570,7 @@
                     }
                 });
                 
-                // ESCUCHAR MI PUNTAJE
+                // Escuchar mi propio puntaje (Subcolección)
                 onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode, 'players', sessionID), (snap) => {
                     if(snap.exists()) {
                         const sc = snap.data().score;
@@ -562,8 +582,10 @@
 
                 showScreen('wait-screen');
             } catch (error) { 
-                console.error(error);
-                document.getElementById('join-error').innerText = "ERROR AL CONECTAR: " + error.code;
+                console.error("Join Error:", error);
+                let msg = "ERROR DE CONEXIÓN";
+                if(error.code === 'permission-denied') msg = "PERMISO DENEGADO (Revisa Reglas)";
+                document.getElementById('join-error').innerText = msg;
                 document.getElementById('join-error').classList.remove('hidden');
                 btn.disabled = false; btn.innerText = "REINTENTAR"; 
             }
@@ -593,7 +615,6 @@
                 const elapsed = (Date.now() - currentStartTime) / 1000;
                 const bonus = Math.max(0, Math.floor((currentLimit - elapsed) * 20));
                 const points = 100 + bonus;
-                // ACTUALIZAR MI PUNTAJE EN MI DOCUMENTO
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode, 'players', sessionID), { 
                     score: increment(points) 
                 });
@@ -605,11 +626,15 @@
 
         function showFinalRank(playersData) {
             playersData.sort((a, b) => b.score - a.score);
+            // Búsqueda robusta por nombre (en caso de duplicados, toma el primero)
+            // Idealmente se usaría ID, pero playersData es un array de datos puros aquí.
             const myRank = playersData.findIndex(p => p.name === myName) + 1;
+            
             document.getElementById('wait-message').innerText = "¡TORNEO FINALIZADO!";
             const rankDiv = document.getElementById('final-rank-display');
             rankDiv.classList.remove('hidden');
             document.getElementById('rank-number').innerText = `#${myRank}`;
+            document.getElementById('player-exit-btn').classList.remove('hidden');
             showScreen('wait-screen');
         }
 
@@ -670,4 +695,5 @@
     </script>
 </body>
 </html>
+
 
