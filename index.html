@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#2c3e50">
     
-    <title>Reto Agente PE: Coach Pro</title>
+    <title>Reto Agente PE: Universal</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -59,7 +59,7 @@
         }
 
         /* Barras de Tiempo */
-        #timer-container, .player-timer-container { width: 100%; height: 100%; background: #2c3e50; border: 3px solid #fff; overflow: hidden; position: relative; border-radius: 8px; }
+        #timer-container, .player-timer-container { width: 100%; height: 20px; background: #000; border: 2px solid #fff; overflow: hidden; position: relative; }
         #timer-bar-fill, #player-timer-fill { height: 100%; width: 100%; transition: width 1s linear, background-color 0.3s; background-color: var(--time-green); }
         
         .timer-high { background-color: var(--time-green) !important; }
@@ -214,42 +214,33 @@
         <button onclick="window.nextQuestion()" class="px-8 py-4 md:px-10 md:py-5 bg-green-500 text-white text-[10px] md:text-[12px] pixel-btn">¡INICIAR EVALUACIÓN!</button>
     </div>
 
-    <!-- VISTA HOST (JUEGO) RE-DISEÑADA -->
-    <div id="host-screen" class="hidden w-full max-w-7xl z-10 flex flex-col items-center p-2">
-        
-        <!-- Header Info Grande -->
-        <div class="w-full flex justify-between items-end mb-4 border-b-4 border-white pb-4">
-            <div class="flex flex-col">
-                <span class="text-xs text-gray-400">CÓDIGO SALA</span>
-                <span id="game-room-code" class="text-yellow-400 text-2xl md:text-4xl font-bold tracking-widest">---</span>
+    <!-- VISTA HOST (JUEGO) -->
+    <div id="host-screen" class="hidden w-full max-w-6xl z-10 flex flex-col items-center p-2">
+        <div class="w-full flex justify-between items-center mb-4 px-2 md:px-8">
+            <div class="flex gap-2 md:gap-4">
+                <div class="pixel-box px-3 py-1 bg-black border-white text-white text-[8px] md:text-[10px]">
+                    <span class="hidden md:inline">PREGUNTA:</span> <span id="q-counter" class="text-yellow-400">1/--</span>
+                </div>
+                <div class="pixel-box px-3 py-1 bg-black border-white text-white text-[8px] md:text-[10px]">
+                    <span class="hidden md:inline">SALA:</span> <span id="game-room-code" class="text-yellow-400">---</span>
+                </div>
             </div>
-            <div class="flex flex-col items-end">
-                <span class="text-xs text-gray-400">PROGRESO</span>
-                <span id="q-counter" class="text-white text-xl md:text-3xl font-bold">PREGUNTA 1 DE --</span>
-            </div>
+            <div id="host-timer-text" class="bg-white px-3 py-1 border-2 md:border-4 border-black text-red-600 font-bold text-lg md:text-2xl min-w-[3rem] text-center">0s</div>
         </div>
 
-        <!-- Timer Section (Gigante) -->
-        <div class="w-full mb-6">
-            <div class="flex justify-between items-center mb-1">
-                <span class="text-xs text-white uppercase animate-pulse">Tiempo para responder:</span>
-                <span id="host-timer-text" class="text-yellow-400 text-2xl md:text-3xl font-bold">0s</span>
-            </div>
-            <div id="timer-container" class="w-full h-8 md:h-10 border-4 border-white bg-gray-900 rounded-md">
-                <div id="timer-bar-fill"></div>
-            </div>
+        <div id="timer-container" class="mb-4 md:mb-8 w-full max-w-5xl mx-auto h-6 md:h-10 lg:h-12 border-4">
+            <div id="timer-bar-fill"></div>
         </div>
 
-        <!-- Caja de Pregunta -->
-        <div class="pixel-box w-full max-w-5xl p-6 md:p-10 mb-6 md:mb-8 text-center track-bg mx-auto shadow-2xl">
-            <h2 id="host-question" class="text-sm md:text-2xl lg:text-3xl text-white uppercase leading-snug drop-shadow-md font-bold">CARGANDO PREGUNTA...</h2>
+        <div class="pixel-box w-full max-w-5xl p-4 md:p-8 mb-4 md:mb-6 text-center track-bg mx-auto shadow-2xl">
+            <div id="diff-indicator" class="text-[8px] md:text-[10px] bg-black text-white px-3 py-1 mb-2 inline-block">TIEMPO: ---</div>
+            <h2 id="host-question" class="text-xs sm:text-sm md:text-xl lg:text-2xl text-white uppercase leading-snug mt-2 drop-shadow-md font-bold">CARGANDO PREGUNTA...</h2>
         </div>
         
-        <!-- Opciones -->
-        <div id="host-options" class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 w-full max-w-6xl mx-auto"></div>
+        <div id="host-options" class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 w-full max-w-5xl mx-auto"></div>
         
-        <div class="mt-8">
-            <button onclick="window.showPodium()" class="px-8 py-3 bg-red-600 text-white text-xs md:text-sm pixel-btn border-2 border-white hover:bg-red-700">FINALIZAR JUEGO</button>
+        <div class="mt-6 md:mt-8">
+            <button onclick="window.showPodium()" class="px-6 py-3 md:px-8 md:py-4 bg-red-600 text-white text-[8px] md:text-[10px] pixel-btn">FINALIZAR JUEGO</button>
         </div>
     </div>
 
@@ -274,17 +265,14 @@
         </div>
     </div>
 
-    <!-- PODIO FINAL (HOST) -->
+    <!-- PODIO FINAL -->
     <div id="podium-screen" class="hidden w-full max-w-5xl z-10 text-center flex flex-col items-center justify-center p-4">
         <h2 class="text-xl md:text-3xl text-yellow-400 mb-6 uppercase drop-shadow-md animate-bounce">🏆 CAMPEONES 🏆</h2>
-        
         <div id="podium-container" class="flex items-end justify-center gap-2 md:gap-6 h-64 md:h-80 w-full mb-8"></div>
-        
         <div class="w-full max-w-3xl bg-black bg-opacity-70 p-4 md:p-6 border-4 border-white rounded-lg mb-6">
-            <h3 class="text-white text-[12px] md:text-[16px] mb-4 uppercase border-b-2 border-white pb-2">Cuadro de Honor</h3>
+            <h3 class="text-white text-[10px] md:text-[12px] mb-4 uppercase border-b-2 border-white pb-2">Cuadro de Honor</h3>
             <div id="honor-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left"></div>
         </div>
-        
         <button onclick="window.resetGame()" class="px-8 py-4 md:px-12 md:py-6 bg-white text-black text-[10px] md:text-[12px] pixel-btn border-4 border-yellow-500 hover:bg-yellow-100">NUEVA PARTIDA</button>
     </div>
 
@@ -295,8 +283,31 @@
 
         document.addEventListener('touchstart', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
         
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'agente-pe-coach-pro';
+        // --- CONFIGURACIÓN PARA GITHUB ---
+        // Para subir a GitHub: Reemplaza este objeto con tu configuración de Firebase Console
+        const manualConfig = {
+            apiKey: "AIzaSyA6pQbm22ZOgf2DzX-LIl9rEFUs9Lcs_v8",
+            authDomain: "agente-pe-48b82.firebaseapp.com",
+            projectId: "agente-pe-48b82",
+            storageBucket: "agente-pe-48b82.firebasestorage.app",
+            messagingSenderId: "700138682010",
+            appId: "1:700138682010:web:a2d2bf1d433e04ffd25123"
+        };
+
+        // Lógica Híbrida: Detecta si está en el Editor o en GitHub
+        let firebaseConfig;
+        let isInternalEnv = false;
+
+        if (typeof __firebase_config !== 'undefined') {
+            // Estamos en el editor
+            firebaseConfig = JSON.parse(__firebase_config);
+            isInternalEnv = true;
+        } else {
+            // Estamos en GitHub/Web externo
+            firebaseConfig = manualConfig;
+        }
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'agente-pe-universal-v3';
         
         let app, auth, db, user;
         let myRole = '', myName = '', myScore = 0, currentCode = '';
@@ -308,7 +319,7 @@
         
         const sessionID = crypto.randomUUID();
 
-        // Audio System
+        // Audio
         function playTone(freq, dur, type = 'square') {
             if (!audioCtx || !isMusicPlaying) return;
             const osc = audioCtx.createOscillator();
@@ -379,8 +390,19 @@
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
-                else await signInAnonymously(auth);
+
+                // Lógica de Autenticación Universal
+                if (isInternalEnv) {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } else {
+                    // Modo GitHub/Web
+                    await signInAnonymously(auth);
+                }
+
                 onAuthStateChanged(auth, (u) => { if (u) { user = u; showScreen('role-screen'); } });
             } catch (err) { console.error("Init Error:", err); }
         }
@@ -438,8 +460,9 @@
             const options = shuffle([{ t: item.c, ok: true }, ...item.w.map(x => ({ t: x, ok: false }))]);
             currentCorrect = options.findIndex(o => o.ok);
 
-            document.getElementById('q-counter').innerText = `PREGUNTA ${currentQuestionNum} DE ${totalQuestions}`;
+            document.getElementById('q-counter').innerText = `${currentQuestionNum}/${totalQuestions}`;
             document.getElementById('host-question').innerText = item.q;
+            document.getElementById('diff-indicator').innerText = `${item.t}s | ${item.d}`;
             const container = document.getElementById('host-options');
             container.innerHTML = '';
             const colors = ['btn-red', 'btn-blue', 'btn-yellow', 'btn-green'];
