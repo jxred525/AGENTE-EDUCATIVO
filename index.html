@@ -77,6 +77,11 @@
         }
         @media (min-width: 768px) { .big-code { font-size: 5rem; letter-spacing: 0.5rem; } }
 
+        .host-option-text { font-size: 0.8rem; line-height: 1.3; font-weight: bold; }
+        @media (min-width: 768px) { .host-option-text { font-size: 1.2rem; } }
+
+        .diff-tag { font-size: 9px; padding: 6px 10px; border: 2px solid black; color: white; margin-bottom: 8px; display: inline-block; }
+        
         .crt-overlay { 
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.05) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02)); 
             background-size: 100% 2px, 3px 100%; 
@@ -283,8 +288,6 @@
 
         document.addEventListener('touchstart', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
         
-        // --- CONFIGURACIÓN PARA GITHUB ---
-        // Para subir a GitHub: Reemplaza este objeto con tu configuración de Firebase Console
         const manualConfig = {
             apiKey: "AIzaSyA6pQbm22ZOgf2DzX-LIl9rEFUs9Lcs_v8",
             authDomain: "agente-pe-48b82.firebaseapp.com",
@@ -294,16 +297,13 @@
             appId: "1:700138682010:web:a2d2bf1d433e04ffd25123"
         };
 
-        // Lógica Híbrida: Detecta si está en el Editor o en GitHub
         let firebaseConfig;
         let isInternalEnv = false;
 
         if (typeof __firebase_config !== 'undefined') {
-            // Estamos en el editor
             firebaseConfig = JSON.parse(__firebase_config);
             isInternalEnv = true;
         } else {
-            // Estamos en GitHub/Web externo
             firebaseConfig = manualConfig;
         }
 
@@ -317,7 +317,15 @@
         let audioCtx = null, isMusicPlaying = false;
         let currentQuestionNum = 0, totalQuestions = 0;
         
-        const sessionID = crypto.randomUUID();
+        // FUNCIÓN UUID COMPATIBLE CON MÓVILES (Fix)
+        function generateUUID() {
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+        const sessionID = generateUUID();
 
         // Audio
         function playTone(freq, dur, type = 'square') {
@@ -391,7 +399,6 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // Lógica de Autenticación Universal
                 if (isInternalEnv) {
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                         await signInWithCustomToken(auth, __initial_auth_token);
@@ -399,7 +406,6 @@
                         await signInAnonymously(auth);
                     }
                 } else {
-                    // Modo GitHub/Web
                     await signInAnonymously(auth);
                 }
 
@@ -501,7 +507,7 @@
             }, 1000);
         }
 
-        // PLAYER LOGIC
+        // PLAYER LOGIC (FIXED)
         window.joinGame = async () => {
             const cin = document.getElementById('join-code').value.trim().toUpperCase();
             const name = document.getElementById('player-name').value.trim().toUpperCase();
@@ -512,7 +518,10 @@
             const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', cin);
             try {
                 const roomSnap = await getDoc(roomRef);
-                if (!roomSnap.exists()) { document.getElementById('join-error').classList.remove('hidden'); btn.disabled = false; btn.innerText = "VINCULAR"; return; }
+                if (!roomSnap.exists()) { 
+                    document.getElementById('join-error').classList.remove('hidden'); 
+                    btn.disabled = false; btn.innerText = "VINCULAR"; return; 
+                }
                 currentCode = cin; myName = name;
                 await updateDoc(roomRef, { [`players.${sessionID}`]: { name: myName, score: 0 } });
 
@@ -539,7 +548,11 @@
                     }
                 });
                 showScreen('wait-screen');
-            } catch (error) { btn.disabled = false; btn.innerText = "ERROR"; }
+            } catch (error) { 
+                console.error(error);
+                alert("ERROR AL UNIR: " + error.message);
+                btn.disabled = false; btn.innerText = "REINTENTAR"; 
+            }
         };
 
         function startPlayerTimer(sec) {
@@ -642,3 +655,4 @@
     </script>
 </body>
 </html>
+
