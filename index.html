@@ -150,7 +150,6 @@
 <body class="flex flex-col items-center justify-center min-h-screen">
     <div class="crt-overlay"></div>
 
-    <!-- PANTALLA CARGA -->
     <div id="status-screen" class="w-full max-w-sm pixel-box p-8 text-center z-10">
         <div id="loader" class="flex flex-col items-center gap-6">
             <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-black"></div>
@@ -159,7 +158,6 @@
         </div>
     </div>
 
-    <!-- SELECCIÓN DE ROL -->
     <div id="role-screen" class="hidden w-full max-w-sm pixel-box p-8 text-center z-10 relative">
         <h1 class="text-[12px] md:text-[14px] mb-8 text-blue-900 uppercase leading-relaxed">RETO: EVALUACIÓN NACIONAL</h1>
         <button onclick="window.showInstructions('host')" class="w-full py-4 mb-4 bg-blue-600 text-[10px] md:text-[12px] pixel-btn">COACH (DOCENTE)</button>
@@ -169,7 +167,6 @@
         </div>
     </div>
 
-    <!-- INSTRUCCIONES -->
     <div id="instruction-screen" class="hidden w-full max-w-md pixel-box p-8 z-10 relative">
         <button onclick="window.goBack()" class="back-btn">⬅ SALIR</button>
         <h2 class="text-center text-[12px] mb-4 text-red-600 uppercase mt-6">REGLAS DEL JUEGO</h2>
@@ -177,7 +174,6 @@
         <button onclick="window.proceedAfterInstructions()" class="w-full py-4 bg-black text-white text-[10px] pixel-btn">ENTENDIDO</button>
     </div>
 
-    <!-- LOBBY JUGADOR -->
     <div id="player-lobby" class="hidden w-full max-w-sm pixel-box p-6 text-center z-10 relative">
         <button onclick="window.goBack()" class="back-btn">⬅ SALIR</button>
         <h2 class="text-[10px] mb-2 text-blue-700 mt-8">CÓDIGO DE SALA</h2>
@@ -188,13 +184,11 @@
         <button onclick="window.joinGame()" id="join-btn" class="w-full py-4 bg-orange-500 text-white text-[10px] pixel-btn">UNIRSE</button>
     </div>
 
-    <!-- ESPERA JUGADOR -->
     <div id="wait-screen" class="hidden w-full max-w-sm pixel-box p-10 text-center z-10">
         <div class="flex flex-col items-center gap-6">
             <i class="fas fa-running animate-bounce text-4xl text-green-600"></i>
             <p id="wait-message" class="text-[10px] leading-loose text-center">ESPERANDO INICIO...</p>
             
-            <!-- Posición Final (Solo visible al terminar) -->
             <div id="final-rank-display" class="hidden w-full bg-blue-800 text-white p-4 border-4 border-yellow-400 animate-pulse">
                 <p class="text-[10px] mb-2">TU POSICIÓN FINAL:</p>
                 <p id="rank-number" class="text-3xl font-bold text-yellow-400">#--</p>
@@ -204,12 +198,10 @@
                 PUNTAJE: <span id="player-score-wait" class="text-white text-lg block mt-2">0</span>
             </div>
 
-            <!-- Botón Salir (Solo al final) -->
             <button id="player-exit-btn" onclick="window.goBack()" class="hidden w-full py-3 bg-red-600 text-white text-[8px] pixel-btn mt-4">VOLVER AL MENÚ</button>
         </div>
     </div>
 
-    <!-- LOBBY HOST -->
     <div id="host-lobby-screen" class="hidden w-full max-w-5xl z-10 text-center flex flex-col items-center relative p-4">
         <button onclick="window.goBack()" class="back-btn top-4 left-4 text-xs md:text-sm md:px-4 md:py-2">⬅ CERRAR SALA</button>
         <h2 class="text-[10px] md:text-[14px] mb-4 text-white uppercase tracking-widest mt-8">CÓDIGO DE ACCESO:</h2>
@@ -223,7 +215,6 @@
         <button onclick="window.nextQuestion()" class="px-8 py-4 md:px-10 md:py-5 bg-green-500 text-white text-[10px] md:text-[12px] pixel-btn">¡INICIAR EVALUACIÓN!</button>
     </div>
 
-    <!-- VISTA HOST (JUEGO) -->
     <div id="host-screen" class="hidden w-full max-w-6xl z-10 flex flex-col items-center p-2">
         <div class="w-full flex justify-between items-center mb-4 px-2 md:px-8">
             <div class="flex gap-2 md:gap-4">
@@ -253,7 +244,6 @@
         </div>
     </div>
 
-    <!-- BOTONERA JUGADOR -->
     <div id="player-screen" class="hidden fixed inset-0 p-4 flex flex-col z-10 bg-[#1a1a1a]">
         <div class="flex justify-between items-center mb-2">
             <div class="text-[8px] text-white">PREGUNTA: <span id="player-q-counter">1/--</span></div>
@@ -267,14 +257,13 @@
         </div>
         
         <div class="grid grid-cols-2 gap-4 flex-grow">
-            <button onclick="window.sendAnswer(0)" class="btn-red pixel-btn flex flex-col items-center justify-center h-full"><i class="fas fa-square text-4xl md:text-5xl mb-2"></i></button>
-            <button onclick="window.sendAnswer(1)" class="btn-blue pixel-btn flex flex-col items-center justify-center h-full"><i class="fas fa-caret-up text-5xl md:text-6xl mb-2"></i></button>
-            <button onclick="window.sendAnswer(2)" class="btn-yellow pixel-btn flex flex-col items-center justify-center h-full"><i class="fas fa-circle text-4xl md:text-5xl mb-2"></i></button>
-            <button onclick="window.sendAnswer(3)" class="btn-green pixel-btn flex flex-col items-center justify-center h-full"><i class="fas fa-play fa-rotate-270 text-4xl md:text-5xl mb-2"></i></button>
+            <button onclick="window.sendAnswer(0)" class="btn-red pixel-btn flex flex-col items-center justify-center h-full transition-all duration-300"><i class="fas fa-square text-4xl md:text-5xl mb-2"></i></button>
+            <button onclick="window.sendAnswer(1)" class="btn-blue pixel-btn flex flex-col items-center justify-center h-full transition-all duration-300"><i class="fas fa-caret-up text-5xl md:text-6xl mb-2"></i></button>
+            <button onclick="window.sendAnswer(2)" class="btn-yellow pixel-btn flex flex-col items-center justify-center h-full transition-all duration-300"><i class="fas fa-circle text-4xl md:text-5xl mb-2"></i></button>
+            <button onclick="window.sendAnswer(3)" class="btn-green pixel-btn flex flex-col items-center justify-center h-full transition-all duration-300"><i class="fas fa-play fa-rotate-270 text-4xl md:text-5xl mb-2"></i></button>
         </div>
     </div>
 
-    <!-- PODIO FINAL -->
     <div id="podium-screen" class="hidden w-full max-w-5xl z-10 text-center flex flex-col items-center justify-center p-4">
         <h2 class="text-xl md:text-3xl text-yellow-400 mb-6 uppercase drop-shadow-md animate-bounce">🏆 CAMPEONES 🏆</h2>
         <div id="podium-container" class="flex items-end justify-center gap-2 md:gap-6 h-64 md:h-80 w-full mb-8"></div>
@@ -322,6 +311,43 @@
         let audioCtx = null, isMusicPlaying = false;
         let currentQuestionNum = 0, totalQuestions = 0;
         
+        // --- NUEVAS FUNCIONES PARA ILUMINAR RESPUESTA ---
+        window.highlightCorrectAnswerHost = (correctIdx) => {
+            const container = document.getElementById('host-options');
+            if(!container) return;
+            const options = container.children;
+            for(let i=0; i<options.length; i++) {
+                if(i === correctIdx) {
+                    options[i].classList.add('scale-105', 'ring-8', 'ring-white', 'animate-pulse', 'z-10');
+                } else {
+                    options[i].classList.add('opacity-25', 'grayscale');
+                }
+            }
+        };
+
+        window.highlightCorrectAnswerPlayer = (correctIdx) => {
+            const playerScreen = document.getElementById('player-screen');
+            const buttons = playerScreen.querySelectorAll('.grid > button');
+            buttons.forEach((btn, i) => {
+                if(i === correctIdx) {
+                    btn.classList.add('scale-105', 'ring-8', 'ring-white', 'animate-pulse', 'z-10');
+                    btn.classList.remove('opacity-25', 'grayscale');
+                } else {
+                    btn.classList.add('opacity-25', 'grayscale');
+                    btn.classList.remove('scale-105', 'ring-8', 'ring-white', 'animate-pulse', 'z-10');
+                }
+            });
+        };
+
+        window.resetPlayerButtons = () => {
+            const playerScreen = document.getElementById('player-screen');
+            const buttons = playerScreen.querySelectorAll('.grid > button');
+            buttons.forEach(btn => {
+                btn.classList.remove('opacity-25', 'grayscale', 'scale-105', 'ring-8', 'ring-white', 'animate-pulse', 'z-10');
+            });
+        };
+        // ------------------------------------------------
+
         // Función UUID Compatible
         function generateUUID() {
             if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
@@ -488,7 +514,7 @@
             container.innerHTML = '';
             const colors = ['btn-red', 'btn-blue', 'btn-yellow', 'btn-green'];
             options.forEach((opt, i) => {
-                container.innerHTML += `<div class="${colors[i]} pixel-box p-4 md:p-6 text-white border-black flex items-center justify-center text-center h-auto min-h-[5rem] cursor-default"><span class="readable-font text-xs sm:text-sm md:text-xl lg:text-2xl leading-tight break-words hyphens-auto">${opt.t}</span></div>`;
+                container.innerHTML += `<div class="${colors[i]} pixel-box p-4 md:p-6 text-white border-black flex items-center justify-center text-center h-auto min-h-[5rem] cursor-default transition-all duration-300"><span class="readable-font text-xs sm:text-sm md:text-xl lg:text-2xl leading-tight break-words hyphens-auto">${opt.t}</span></div>`;
             });
 
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode), { 
@@ -514,10 +540,16 @@
 
                 if (left <= 0) {
                     clearInterval(hostTimerInterval);
+                    // Mantenemos el estatus 'timeout' pero agregamos la lógica visual de 5 segundos
                     await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode), { status: 'timeout' });
-                    document.getElementById('host-question').innerText = "¡TIEMPO AGOTADO!";
+                    document.getElementById('host-question').innerText = "¡TIEMPO AGOTADO! RESPUESTA CORRECTA:";
+                    
+                    // LLAMADA A LA NUEVA FUNCIÓN PARA ILUMINAR EN EL HOST
+                    window.highlightCorrectAnswerHost(currentCorrect);
+                    
                     playTone(110, 0.5, 'sawtooth');
-                    setTimeout(() => window.nextQuestion(), 2000);
+                    // MODIFICADO: Esperar 5000ms en lugar de 2000ms
+                    setTimeout(() => window.nextQuestion(), 5000); 
                 }
             }, 1000);
         }
@@ -555,11 +587,21 @@
                     
                     if (s.status === 'playing' && s.ts !== currentStartTime) {
                         currentStartTime = s.ts; currentCorrect = s.correct; currentLimit = s.limit;
-                        hasAnswered = false; showScreen('player-screen');
+                        hasAnswered = false; 
+                        
+                        // RESTABLECER BOTONES
+                        window.resetPlayerButtons();
+                        
+                        showScreen('player-screen');
                         document.getElementById('player-q-counter').innerText = `${s.qNum}/${s.tQ}`;
                         startPlayerTimer(s.limit);
-                    } else if (s.status === 'timeout' && !hasAnswered) {
-                        hasAnswered = true; document.getElementById('wait-message').innerText = "¡TIEMPO AGOTADO!"; showScreen('wait-screen');
+                        
+                    } else if (s.status === 'timeout') {
+                        // NUEVA LÓGICA: Mostrar siempre la respuesta en el celular, hayan contestado o no.
+                        hasAnswered = true; // Bloquea clics adicionales
+                        showScreen('player-screen');
+                        window.highlightCorrectAnswerPlayer(s.correct);
+                        
                     } else if (s.status === 'finished') { 
                         // Obtener todos los jugadores para el ranking final (Corrección)
                         getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'gamerooms', currentCode, 'players')).then(sn => {
@@ -695,6 +737,3 @@
     </script>
 </body>
 </html>
-
-
-
